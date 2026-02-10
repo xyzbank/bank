@@ -3,42 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Банк-Кликер: Финансовая Империя</title>
+    <title>Банк-Кликер: Финансовая Империя с Миром</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1><i class="fas fa-university"></i> Банк-Кликер</h1>
-            <div class="stats">
-                <div class="stat"><i class="fas fa-coins"></i> Капитал: <span id="money">0</span> ₽</div>
-                <div class="stat"><i class="fas fa-chart-line"></i> Депозиты: <span id="passiveIncome">0</span> ₽/сек</div>
-                <div class="stat"><i class="fas fa-users"></i> Клиенты: <span id="clients">0</span></div>
-            </div>
-        </header>
-
-        <main>
-            <div class="clicker-area">
-                <h2>Главный офис</h2>
-                <p>Кликайте по карте, чтобы привлекать первых клиентов и получать капитал!</p>
-                <div class="card" id="clickCard">
-                    <div class="card-chip"></div>
-                    <div class="card-logo">SBER</div>
-                    <div class="card-number">● ● ● ●   ● ● ● ●   ● ● ● ●   <span>2024</span></div>
-                    <div class="card-holder">ВАШ БАНК</div>
-                    <div class="card-plus" id="clickBonus">+1,000 ₽</div>
+        <!-- Главный экран банка -->
+        <div id="bankScreen" class="screen active">
+            <header>
+                <h1><i class="fas fa-university"></i> Банк-Кликер: Финансовая Империя</h1>
+                <div class="stats">
+                    <div class="stat"><i class="fas fa-coins"></i> Капитал: <span id="money">0</span> ₽</div>
+                    <div class="stat"><i class="fas fa-chart-line"></i> Депозиты: <span id="passiveIncome">0</span> ₽/сек</div>
+                    <div class="stat"><i class="fas fa-users"></i> Клиенты: <span id="clients">0</span></div>
+                    <div class="stat"><i class="fas fa-building"></i> Уровень офиса: <span id="officeLevel">1</span></div>
                 </div>
-                <p class="hint">Доход с клика: <span id="clickValue">1,000</span> ₽</p>
-            </div>
+                <div class="actions">
+                    <button id="worldBtn" class="world-btn">
+                        <i class="fas fa-globe"></i> 🌍 Войти в мир
+                    </button>
+                </div>
+            </header>
 
-            <div class="upgrades">
-                <h2><i class="fas fa-cogs"></i> Управление Банком</h2>
-                <div class="upgrades-grid" id="upgradesContainer">
-                    <!-- Улучшения будут добавляться сюда через JS -->
+            <main>
+                <div class="clicker-area">
+                    <h2>Главный офис</h2>
+                    <p>Кликайте по карте, чтобы привлекать клиентов и получать капитал!</p>
+                    <div class="card" id="clickCard">
+                        <div class="card-chip"></div>
+                        <div class="card-logo">SBER</div>
+                        <div class="card-number">● ● ● ●   ● ● ● ●   ● ● ● ●   <span>2024</span></div>
+                        <div class="card-holder">ВАШ БАНК</div>
+                        <div class="card-plus" id="clickBonus">+1,000 ₽</div>
+                    </div>
+                    <p class="hint">Доход с клика: <span id="clickValue">1,000</span> ₽</p>
+                    <p class="world-hint"><i class="fas fa-info-circle"></i> Нажмите "Войти в мир" чтобы увидеть свой банк и клиентов!</p>
+                </div>
+
+                <div class="upgrades">
+                    <h2><i class="fas fa-cogs"></i> Управление Банком</h2>
+                    <div class="upgrades-grid" id="upgradesContainer">
+                        <!-- Улучшения будут добавляться через JS -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Экран мира -->
+        <div id="worldScreen" class="screen">
+            <div class="world-header">
+                <button id="backToBankBtn" class="back-btn">
+                    <i class="fas fa-arrow-left"></i> Вернуться в банк
+                </button>
+                <div class="world-stats">
+                    <span><i class="fas fa-coins"></i> <span id="worldMoney">0</span> ₽</span>
+                    <span><i class="fas fa-users"></i> <span id="worldClients">0</span></span>
+                    <span><i class="fas fa-building"></i> Уровень: <span id="worldOfficeLevel">1</span></span>
                 </div>
             </div>
-        </main>
+
+            <div class="world-container">
+                <div class="world-map" id="worldMap">
+                    <!-- Здесь будет генерироваться карта -->
+                </div>
+                
+                <div class="office-info">
+                    <h3><i class="fas fa-building"></i> Ваш офис</h3>
+                    <div class="office-stats">
+                        <div class="office-stat">
+                            <i class="fas fa-user-friends"></i>
+                            <div>
+                                <div class="stat-label">Клиентов в час</div>
+                                <div class="stat-value" id="officeVisitors">5</div>
+                            </div>
+                        </div>
+                        <div class="office-stat">
+                            <i class="fas fa-chart-bar"></i>
+                            <div>
+                                <div class="stat-label">Привлекательность</div>
+                                <div class="stat-value" id="officeAttractiveness">10%</div>
+                            </div>
+                        </div>
+                        <div class="office-stat">
+                            <i class="fas fa-expand-alt"></i>
+                            <div>
+                                <div class="stat-label">Вместимость</div>
+                                <div class="stat-value" id="officeCapacity">20 чел</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="office-upgrades">
+                        <h4>Улучшения офиса</h4>
+                        <div class="office-upgrade-list" id="officeUpgrades">
+                            <!-- Улучшения офиса будут здесь -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно улучшения офиса -->
+    <div id="officeUpgradeModal" class="modal">
+        <div class="modal-content">
+            <h3><i class="fas fa-hard-hat"></i> Улучшение офиса</h3>
+            <p id="upgradeDescription">Описание улучшения</p>
+            <div class="upgrade-details">
+                <div class="detail">
+                    <span>Текущий уровень:</span>
+                    <span id="currentLevel">1</span>
+                </div>
+                <div class="detail">
+                    <span>Стоимость улучшения:</span>
+                    <span id="upgradeCost" class="cost">0 ₽</span>
+                </div>
+                <div class="detail">
+                    <span>Новый уровень:</span>
+                    <span id="newLevel" class="new">2</span>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancelUpgradeBtn" class="btn-secondary">Отмена</button>
+                <button id="confirmUpgradeBtn" class="btn-primary">Улучшить</button>
+            </div>
+        </div>
     </div>
 
     <script src="game.js"></script>
