@@ -3,193 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bank Card Simulator - Карточный кликер</title>
+    <title>Банк-Кликер: Финансовая Империя</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="manifest" href="manifest.json">
 </head>
 <body>
     <div class="container">
         <header>
-            <div class="header-info">
-                <h1><i class="fas fa-credit-card"></i> Bank Card Simulator</h1>
-                <div class="player-id">
-                    <span>Ваш ID: <strong id="player-id">Загрузка...</strong></span>
-                    <button id="copy-id-btn"><i class="fas fa-copy"></i></button>
-                </div>
-            </div>
-            <div class="stats-bar">
-                <div class="stat">
-                    <span class="stat-label">Баланс:</span>
-                    <span class="stat-value" id="balance">1,000.00 ₽</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Доход/сек:</span>
-                    <span class="stat-value" id="income-per-second">10.50 ₽</span>
-                </div>
-                <div class="stat">
-                    <span class="stat-label">Уровень:</span>
-                    <span class="stat-value" id="level">1</span>
-                </div>
+            <h1><i class="fas fa-university"></i> Банк-Кликер</h1>
+            <div class="stats">
+                <div class="stat"><i class="fas fa-coins"></i> Капитал: <span id="money">0</span> ₽</div>
+                <div class="stat"><i class="fas fa-chart-line"></i> Депозиты: <span id="passiveIncome">0</span> ₽/сек</div>
+                <div class="stat"><i class="fas fa-users"></i> Клиенты: <span id="clients">0</span></div>
             </div>
         </header>
 
         <main>
-            <div class="game-area">
-                <section class="clicker-section">
-                    <h2><i class="fas fa-mouse-pointer"></i> Основная карта</h2>
-                    <div class="card-display" id="main-card">
-                        <div class="card-front">
-                            <div class="card-header">
-                                <span class="bank-name">BANK SIMULATOR</span>
-                                <span class="card-type">PLATINUM</span>
-                            </div>
-                            <div class="card-chip">
-                                <i class="fas fa-microchip"></i>
-                            </div>
-                            <div class="card-number">
-                                <span>**** **** **** </span>
-                                <span id="last-digits">1234</span>
-                            </div>
-                            <div class="card-footer">
-                                <div class="card-holder">
-                                    <span class="label">ВЛАДЕЛЕЦ</span>
-                                    <span id="card-holder">ИГРОК</span>
-                                </div>
-                                <div class="card-expiry">
-                                    <span class="label">СРОК ДЕЙСТВИЯ</span>
-                                    <span id="expiry-date">12/30</span>
-                                </div>
-                            </div>
-                            <div class="click-area">
-                                <button id="click-btn" class="click-button">
-                                    <i class="fas fa-hand-pointer"></i>
-                                    <span>КЛИКАЙ ДЛЯ ЗАРАБОТКА!</span>
-                                    <small>+<span id="click-value">10.00</span> ₽ за клик</small>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-stats">
-                        <div class="card-stat">
-                            <span>Бонус за клик:</span>
-                            <span id="click-bonus">10.00 ₽</span>
-                        </div>
-                        <div class="card-stat">
-                            <span>Пассивный доход:</span>
-                            <span id="passive-income">10.50 ₽/сек</span>
-                        </div>
-                        <div class="card-stat">
-                            <span>Всего заработано:</span>
-                            <span id="total-earned">1,000.00 ₽</span>
-                        </div>
-                    </div>
-                </section>
-
-                <div class="content-columns">
-                    <section class="upgrades-section">
-                        <h2><i class="fas fa-level-up-alt"></i> Улучшения карты</h2>
-                        <div class="upgrades-grid" id="upgrades-container">
-                            <!-- Улучшения будут добавляться через JS -->
-                        </div>
-                    </section>
-
-                    <section class="office-section">
-                        <h2><i class="fas fa-building"></i> Офис банка</h2>
-                        <div class="office-info">
-                            <div class="office-level">
-                                <h3>Уровень офиса: <span id="office-level">1</span></h3>
-                                <div class="progress-bar">
-                                    <div class="progress-fill" id="office-progress"></div>
-                                </div>
-                            </div>
-                            <div class="office-upgrades" id="office-upgrades">
-                                <!-- Улучшения офиса будут добавляться через JS -->
-                            </div>
-                        </div>
-                    </section>
+            <div class="clicker-area">
+                <h2>Главный офис</h2>
+                <p>Кликайте по карте, чтобы привлекать первых клиентов и получать капитал!</p>
+                <div class="card" id="clickCard">
+                    <div class="card-chip"></div>
+                    <div class="card-logo">SBER</div>
+                    <div class="card-number">● ● ● ●   ● ● ● ●   ● ● ● ●   <span>2024</span></div>
+                    <div class="card-holder">ВАШ БАНК</div>
+                    <div class="card-plus" id="clickBonus">+1,000 ₽</div>
                 </div>
+                <p class="hint">Доход с клика: <span id="clickValue">1,000</span> ₽</p>
+            </div>
 
-                <section class="transfer-section">
-                    <h2><i class="fas fa-exchange-alt"></i> Переводы между игроками</h2>
-                    <div class="transfer-form">
-                        <div class="input-group">
-                            <label for="recipient-id"><i class="fas fa-user"></i> ID получателя:</label>
-                            <input type="text" id="recipient-id" placeholder="Введите уникальный ID игрока">
-                        </div>
-                        <div class="input-group">
-                            <label for="transfer-amount"><i class="fas fa-money-bill-wave"></i> Сумма перевода:</label>
-                            <input type="number" id="transfer-amount" min="1" value="100" step="10">
-                        </div>
-                        <button id="transfer-btn" class="transfer-button">
-                            <i class="fas fa-paper-plane"></i> Отправить перевод
-                        </button>
-                        <div class="transfer-fee">Комиссия: <span id="transfer-fee">5%</span></div>
-                    </div>
-                    <div class="transactions-history">
-                        <h3>История переводов</h3>
-                        <div class="transactions-list" id="transactions-list">
-                            <!-- История переводов будет добавляться через JS -->
-                        </div>
-                    </div>
-                </section>
-
-                <section class="cards-section">
-                    <h2><i class="fas fa-id-card"></i> Мои карты</h2>
-                    <div class="cards-container" id="cards-container">
-                        <!-- Коллекция карт будет добавляться через JS -->
-                    </div>
-                    <button id="create-card-btn" class="create-card-button">
-                        <i class="fas fa-plus-circle"></i> Создать новую карту (5,000 ₽)
-                    </button>
-                </section>
+            <div class="upgrades">
+                <h2><i class="fas fa-cogs"></i> Управление Банком</h2>
+                <div class="upgrades-grid" id="upgradesContainer">
+                    <!-- Улучшения будут добавляться сюда через JS -->
+                </div>
             </div>
         </main>
-
-        <footer>
-            <p>Bank Card Simulator &copy; 2024 | Игра сохраняется автоматически в вашем браузере</p>
-            <div class="footer-links">
-                <button id="save-btn"><i class="fas fa-save"></i> Сохранить</button>
-                <button id="reset-btn"><i class="fas fa-redo"></i> Сбросить</button>
-                <button id="export-btn"><i class="fas fa-file-export"></i> Экспорт данных</button>
-            </div>
-        </footer>
     </div>
 
-    <!-- Модальное окно для создания карты -->
-    <div id="card-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h2><i class="fas fa-id-card"></i> Создать новую карту</h2>
-            <div class="modal-body">
-                <div class="input-group">
-                    <label for="card-name">Название карты:</label>
-                    <input type="text" id="card-name" placeholder="Моя золотая карта">
-                </div>
-                <div class="input-group">
-                    <label for="card-type">Тип карты:</label>
-                    <select id="card-type">
-                        <option value="standard">Стандартная (+5% к доходу)</option>
-                        <option value="gold">Золотая (+15% к доходу)</option>
-                        <option value="platinum">Платиновая (+30% к доходу)</option>
-                        <option value="diamond">Бриллиантовая (+50% к доходу)</option>
-                    </select>
-                </div>
-                <div class="card-preview">
-                    <div class="preview-card" id="preview-card">
-                        <!-- Предпросмотр карты -->
-                    </div>
-                </div>
-                <button id="confirm-create-card" class="create-button">
-                    <i class="fas fa-check"></i> Создать карту за <span id="create-cost">5,000</span> ₽
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Уведомления -->
-    <div id="notification-area"></div>
-
-    <script src="script.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
