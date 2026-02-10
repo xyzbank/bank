@@ -764,6 +764,24 @@
             font-size: 0.9rem;
             opacity: 0.8;
         }
+        
+        /* Статус сохранения */
+        .save-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            display: none;
+        }
+        
+        .save-status.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -915,11 +933,16 @@
 
     <!-- Уведомление -->
     <div id="notification" class="notification"></div>
+    
+    <!-- Статус сохранения -->
+    <div id="saveStatus" class="save-status">
+        <i class="fas fa-check-circle"></i> Игра сохранена
+    </div>
 
     <script>
         // Игровое состояние
-        const gameState = {
-            version: '2.0',
+        let gameState = {
+            version: '3.0',
             money: 10000,
             passiveIncome: 0,
             clients: 0,
@@ -931,6 +954,7 @@
             selectedCardType: 'gold',
             totalClicks: 0,
             lastSave: Date.now(),
+            saveCount: 0,
             
             // Уровни карт
             cardTypes: [
@@ -953,7 +977,7 @@
                     gradient: 'var(--card-platinum)',
                     nextLevelXP: 200,
                     incomeBonus: 1.5,
-                    unlockRequirement: 50000 // Нужно 50,000 ₽
+                    unlockRequirement: 50000
                 },
                 {
                     id: 'diamond',
@@ -964,7 +988,7 @@
                     gradient: 'var(--card-diamond)',
                     nextLevelXP: 500,
                     incomeBonus: 2.5,
-                    unlockRequirement: 250000 // Нужно 250,000 ₽
+                    unlockRequirement: 250000
                 },
                 {
                     id: 'cyber',
@@ -975,7 +999,7 @@
                     gradient: 'var(--card-cyber)',
                     nextLevelXP: 1000,
                     incomeBonus: 5.0,
-                    unlockRequirement: 1000000 // Нужно 1,000,000 ₽
+                    unlockRequirement: 1000000
                 }
             ],
             
@@ -1044,13 +1068,7 @@
                     costGrowth: 3.0,
                     officeBonus: 0.3
                 }
-            ],
-            
-            // Состояние мира
-            world: {
-                people: [],
-                nextPersonTime: 0
-            }
+            ]
         };
 
         // DOM элементы
@@ -1061,6 +1079,7 @@
         const saveBtn = document.getElementById('saveBtn');
         const clickCard = document.getElementById('clickCard');
         const notification = document.getElementById('notification');
+        const saveStatus = document.getElementById('saveStatus');
 
         // Форматирование чисел
         function formatNumber(num) {
@@ -1082,6 +1101,116 @@
             setTimeout(() => {
                 notification.style.display = 'none';
             }, 3000);
+        }
+
+        // Показать статус сохранения
+        function showSaveStatus() {
+            saveStatus.textContent = `💾 Игра сохранена (${gameState.saveCount} раз)`;
+            saveStatus.className = 'save-status visible';
+            
+            setTimeout(() => {
+                saveStatus.className = 'save-status';
+            }, 2000);
+        }
+
+        // Быстрое сохранение
+        function quickSave() {
+            try {
+                gameState.lastSave = Date.now();
+                gameState.saveCount++;
+                
+                // Сохраняем только необходимые данные для оптимизации
+                const saveData = {
+                    version: gameState.version,
+                    money: gameState.money,
+                    passiveIncome: gameState.passiveIncome,
+                    clients: gameState.clients,
+                    clickValue: gameState.clickValue,
+                    officeLevel: gameState.officeLevel,
+                    cardLevel: gameState.cardLevel,
+                    cardXP: gameState.cardXP,
+                    selectedCardType: gameState.selectedCardType,
+                    totalClicks: gameState.totalClicks,
+                    saveCount: gameState.saveCount,
+                    upgrades: gameState.upgrades.map(u => ({
+                        id: u.id,
+                        level: u.level,
+                        cost: u.cost
+                    })),
+                    cardTypes: gameState.cardTypes.map(c => ({
+                        id: c.id,
+                        level: c.level,
+                        unlocked: c.unlocked,
+                        nextLevelXP: c.nextLevelXP,
+                        incomeBonus: c.incomeBonus
+                    }))
+                };
+                
+                localStorage.setItem('xyzBankSave', JSON.stringify(saveData));
+                return true;
+            } catch (error) {
+                console.error('Save error:', error);
+                return false;
+            }
+        }
+
+        // Загрузка игры
+        function loadGame() {
+            try {
+                const save = localStorage.getItem('xyzBankSave');
+                if (save) {
+                    const loaded = JSON.parse(save);
+                    
+                    // Проверяем версию сохранения
+                    if (loaded.version !== gameState.version) {
+                        showNotification('⚠️ Старое сохранение, некоторые данные могут быть сброшены', 'info');
+                    }
+                    
+                    // Восстанавливаем основные данные
+                    gameState.money = loaded.money || 10000;
+                    gameState.passiveIncome = loaded.passiveIncome || 0;
+                    gameState.clients = loaded.clients || 0;
+                    gameState.clickValue = loaded.clickValue || 1000;
+                    gameState.officeLevel = loaded.officeLevel || 1;
+                    gameState.cardLevel = loaded.cardLevel || 1;
+                    gameState.cardXP = loaded.cardXP || 0;
+                    gameState.selectedCardType = loaded.selectedCardType || 'gold';
+                    gameState.totalClicks = loaded.totalClicks || 0;
+                    gameState.saveCount = loaded.saveCount || 0;
+                    
+                    // Восстанавливаем улучшения
+                    if (loaded.upgrades) {
+                        loaded.upgrades.forEach(savedUpgrade => {
+                            const upgrade = gameState.upgrades.find(u => u.id === savedUpgrade.id);
+                            if (upgrade) {
+                                upgrade.level = savedUpgrade.level;
+                                upgrade.cost = savedUpgrade.cost || upgrade.baseCost;
+                            }
+                        });
+                    }
+                    
+                    // Восстанавливаем карты
+                    if (loaded.cardTypes) {
+                        loaded.cardTypes.forEach(savedCard => {
+                            const card = gameState.cardTypes.find(c => c.id === savedCard.id);
+                            if (card) {
+                                card.level = savedCard.level || 1;
+                                card.unlocked = savedCard.unlocked || false;
+                                card.nextLevelXP = savedCard.nextLevelXP || card.nextLevelXP;
+                                card.incomeBonus = savedCard.incomeBonus || card.incomeBonus;
+                            }
+                        });
+                    }
+                    
+                    showNotification('🔄 Игра загружена из сохранения', 'info');
+                    console.log('Игра успешно загружена');
+                    return true;
+                }
+            } catch (error) {
+                console.error('Load error:', error);
+                showNotification('❌ Ошибка загрузки сохранения', 'error');
+            }
+            return false;
         }
 
         // Обновление UI
@@ -1115,6 +1244,11 @@
             
             // Обновление цвета карты
             updateCardAppearance();
+            
+            // Быстрое сохранение при каждом обновлении UI
+            if (Date.now() - gameState.lastSave > 5000) { // Сохраняем каждые 5 секунд
+                quickSave();
+            }
         }
 
         // Расчет статистики офиса
@@ -1204,6 +1338,9 @@
             setTimeout(() => {
                 clickCard.style.transform = 'rotateY(0deg)';
             }, 300);
+            
+            // Быстрое сохранение после клика
+            quickSave();
         });
 
         // Проверка разблокировки карт
@@ -1213,6 +1350,7 @@
                     card.unlocked = true;
                     showNotification(`🔓 Разблокирована новая карта: ${card.name}!`, 'info');
                     renderCardPreviews();
+                    quickSave();
                 }
             });
         }
@@ -1248,6 +1386,7 @@
             updateCardAppearance();
             renderCardPreviews();
             showNotification(`💳 Выбрана карта: ${card.name}`, 'info');
+            quickSave();
         }
 
         // Рендер улучшений
@@ -1316,6 +1455,9 @@
             if (worldScreen.classList.contains('active')) {
                 renderWorld();
             }
+            
+            // Сохранение после покупки улучшения
+            quickSave();
         }
 
         // Переход в мир
@@ -1333,68 +1475,14 @@
         });
 
         // Сохранение игры
-        saveBtn.addEventListener('click', saveGame);
-
-        function saveGame() {
-            try {
-                gameState.lastSave = Date.now();
-                localStorage.setItem('xyzBankSave', JSON.stringify(gameState));
+        saveBtn.addEventListener('click', () => {
+            if (quickSave()) {
+                showSaveStatus();
                 showNotification('💾 Игра успешно сохранена!', 'success');
-                
-                // Экспорт сохранения в файл
-                const saveData = {
-                    ...gameState,
-                    exportDate: new Date().toISOString()
-                };
-                
-                const blob = new Blob([JSON.stringify(saveData, null, 2)], {type: 'application/json'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `xyzbank_save_${Date.now()}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-            } catch (error) {
+            } else {
                 showNotification('❌ Ошибка сохранения игры', 'error');
-                console.error('Save error:', error);
             }
-        }
-
-        function loadGame() {
-            try {
-                const save = localStorage.getItem('xyzBankSave');
-                if (save) {
-                    const loaded = JSON.parse(save);
-                    
-                    // Обновляем состояние игры
-                    Object.keys(gameState).forEach(key => {
-                        if (loaded[key] !== undefined) {
-                            gameState[key] = loaded[key];
-                        }
-                    });
-                    
-                    // Проверяем новые карты
-                    gameState.cardTypes.forEach((card, index) => {
-                        if (loaded.cardTypes && loaded.cardTypes[index]) {
-                            card.unlocked = loaded.cardTypes[index].unlocked || false;
-                            card.level = loaded.cardTypes[index].level || 1;
-                            card.nextLevelXP = loaded.cardTypes[index].nextLevelXP || card.nextLevelXP;
-                            card.incomeBonus = loaded.cardTypes[index].incomeBonus || card.incomeBonus;
-                        }
-                    });
-                    
-                    showNotification('🔄 Игра загружена из сохранения', 'info');
-                    return true;
-                }
-            } catch (error) {
-                console.error('Load error:', error);
-                showNotification('❌ Ошибка загрузки игры', 'error');
-            }
-            return false;
-        }
+        });
 
         // Рендер мира
         function renderWorld() {
@@ -1552,12 +1640,14 @@
             }, 3000 + Math.random() * 7000);
         }
 
-        // Автосохранение каждые 2 минуты
+        // Автосохранение каждые 30 секунд
         setInterval(() => {
-            if (Date.now() - gameState.lastSave > 120000) {
-                saveGame();
+            if (Date.now() - gameState.lastSave > 30000) {
+                if (quickSave()) {
+                    console.log('Автосохранение выполнено');
+                }
             }
-        }, 60000);
+        }, 10000);
 
         // Пассивный доход
         setInterval(() => {
@@ -1569,7 +1659,7 @@
 
         // Инициализация игры
         function init() {
-            console.log('XYZ Bank v2.0 запущен!');
+            console.log('XYZ Bank v3.0 запущен!');
             
             // Попытка загрузить сохранение
             if (!loadGame()) {
@@ -1580,13 +1670,33 @@
             renderUpgrades();
             renderCardPreviews();
             updateCardAppearance();
+            
+            // Показываем информацию о сохранении
+            if (gameState.saveCount > 0) {
+                showNotification(`🔄 Загружено сохранение №${gameState.saveCount}`, 'info');
+            }
         }
 
-        // Автосохранение при закрытии
+        // Сохранение при закрытии
         window.addEventListener('beforeunload', (e) => {
-            saveGame();
-            e.preventDefault();
-            e.returnValue = '';
+            if (quickSave()) {
+                console.log('Игра сохранена перед закрытием');
+            }
+        });
+
+        // Сохранение при потере фокуса
+        window.addEventListener('blur', () => {
+            quickSave();
+        });
+
+        // Сохранение каждые 30 кликов
+        let clickCounter = 0;
+        clickCard.addEventListener('click', () => {
+            clickCounter++;
+            if (clickCounter >= 30) {
+                quickSave();
+                clickCounter = 0;
+            }
         });
 
         // Запуск при загрузке
