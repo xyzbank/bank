@@ -3,135 +3,685 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Банк-Кликер: Финансовая Империя с Миром</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <title>Банк-Кликер с Миром</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e6f0ff 100%);
+            min-height: 100vh;
+        }
+        
+        /* Экран банка */
+        #bankScreen {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        #worldScreen {
+            display: none;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .active {
+            display: block !important;
+        }
+        
+        /* Шапка */
+        header {
+            background: linear-gradient(135deg, #1e9a50 0%, #167a40 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 15px;
+            font-size: 2rem;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .stat {
+            font-size: 1.2rem;
+        }
+        
+        /* Кнопки */
+        .world-btn, .back-btn {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .world-btn:hover, .back-btn:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #1f6398 100%);
+        }
+        
+        /* Карта для кликов */
+        .clicker-area {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .bank-card {
+            width: 350px;
+            height: 220px;
+            background: linear-gradient(45deg, #1a7c40, #24b35d);
+            margin: 20px auto;
+            border-radius: 15px;
+            padding: 20px;
+            color: white;
+            cursor: pointer;
+            position: relative;
+            user-select: none;
+            box-shadow: 0 15px 35px rgba(30, 154, 80, 0.4);
+        }
+        
+        .bank-card:active {
+            transform: scale(0.98);
+        }
+        
+        .card-chip {
+            width: 50px;
+            height: 35px;
+            background: gold;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        
+        .card-number {
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            margin: 20px 0;
+            font-family: monospace;
+        }
+        
+        .card-logo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        
+        /* Мир */
+        .world-header {
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .world-map {
+            background: #7ec8e3;
+            height: 500px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 3px solid #2c3e50;
+        }
+        
+        .office {
+            position: absolute;
+            bottom: 50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 150px;
+            background: #ecf0f1;
+            border-radius: 10px;
+            border: 4px solid #2c3e50;
+            cursor: pointer;
+        }
+        
+        .office-roof {
+            width: 140px;
+            height: 30px;
+            background: #c0392b;
+            position: absolute;
+            top: -30px;
+            left: -10px;
+            border-radius: 10px 10px 0 0;
+        }
+        
+        .office-door {
+            width: 30px;
+            height: 50px;
+            background: #8b4513;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        
+        .office-sign {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: gold;
+            padding: 5px 15px;
+            border-radius: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .person {
+            position: absolute;
+            bottom: 50px;
+            width: 15px;
+            height: 30px;
+            background: #3498db;
+            border-radius: 5px;
+            animation: walk 10s linear infinite;
+        }
+        
+        @keyframes walk {
+            0% { left: -50px; }
+            100% { left: calc(100% + 50px); }
+        }
+        
+        .road {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 50px;
+            background: #34495e;
+        }
+        
+        .road::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: yellow;
+            transform: translateY(-50%);
+        }
+        
+        .tree {
+            position: absolute;
+            width: 30px;
+            height: 60px;
+            background: #27ae60;
+            border-radius: 10px;
+        }
+        
+        .tree::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -15px;
+            width: 60px;
+            height: 40px;
+            background: #2ecc71;
+            border-radius: 50%;
+        }
+        
+        .competitor {
+            position: absolute;
+            background: #e74c3c;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        
+        /* Улучшения */
+        .upgrades {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .upgrade {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .upgrade button {
+            background: #1e9a50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .upgrade button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        /* Информация о офисе */
+        .office-info {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .office-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 15px 0;
+        }
+        
+        .office-stat {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1e9a50;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Главный экран банка -->
-        <div id="bankScreen" class="screen active">
-            <header>
-                <h1><i class="fas fa-university"></i> Банк-Кликер: Финансовая Империя</h1>
-                <div class="stats">
-                    <div class="stat"><i class="fas fa-coins"></i> Капитал: <span id="money">0</span> ₽</div>
-                    <div class="stat"><i class="fas fa-chart-line"></i> Депозиты: <span id="passiveIncome">0</span> ₽/сек</div>
-                    <div class="stat"><i class="fas fa-users"></i> Клиенты: <span id="clients">0</span></div>
-                    <div class="stat"><i class="fas fa-building"></i> Уровень офиса: <span id="officeLevel">1</span></div>
-                </div>
-                <div class="actions">
-                    <button id="worldBtn" class="world-btn">
-                        <i class="fas fa-globe"></i> 🌍 Войти в мир
-                    </button>
-                </div>
-            </header>
+    <!-- Экран банка -->
+    <div id="bankScreen" class="active">
+        <header>
+            <h1>🏦 Банк-Кликер</h1>
+            <div class="stats">
+                <div class="stat">💰 Капитал: <span id="money">10,000</span> ₽</div>
+                <div class="stat">📈 Пассивный доход: <span id="passiveIncome">0</span> ₽/сек</div>
+                <div class="stat">👥 Клиенты: <span id="clients">0</span></div>
+                <div class="stat">🏢 Уровень офиса: <span id="officeLevel">1</span></div>
+            </div>
+            <button id="worldBtn" class="world-btn">🌍 Войти в мир</button>
+        </header>
 
-            <main>
-                <div class="clicker-area">
-                    <h2>Главный офис</h2>
-                    <p>Кликайте по карте, чтобы привлекать клиентов и получать капитал!</p>
-                    <div class="card" id="clickCard">
-                        <div class="card-chip"></div>
-                        <div class="card-logo">SBER</div>
-                        <div class="card-number">● ● ● ●   ● ● ● ●   ● ● ● ●   <span>2024</span></div>
-                        <div class="card-holder">ВАШ БАНК</div>
-                        <div class="card-plus" id="clickBonus">+1,000 ₽</div>
-                    </div>
-                    <p class="hint">Доход с клика: <span id="clickValue">1,000</span> ₽</p>
-                    <p class="world-hint"><i class="fas fa-info-circle"></i> Нажмите "Войти в мир" чтобы увидеть свой банк и клиентов!</p>
-                </div>
-
-                <div class="upgrades">
-                    <h2><i class="fas fa-cogs"></i> Управление Банком</h2>
-                    <div class="upgrades-grid" id="upgradesContainer">
-                        <!-- Улучшения будут добавляться через JS -->
-                    </div>
-                </div>
-            </main>
+        <div class="clicker-area">
+            <h2>Кликайте по карте для дохода!</h2>
+            <p>Каждый клик приносит <span id="clickValue">1,000</span> ₽</p>
+            <div class="bank-card" id="clickCard">
+                <div class="card-chip"></div>
+                <div class="card-logo">SBER</div>
+                <div class="card-number">•••• •••• •••• 2024</div>
+                <div>ВАШ БАНК</div>
+            </div>
         </div>
 
-        <!-- Экран мира -->
-        <div id="worldScreen" class="screen">
-            <div class="world-header">
-                <button id="backToBankBtn" class="back-btn">
-                    <i class="fas fa-arrow-left"></i> Вернуться в банк
-                </button>
-                <div class="world-stats">
-                    <span><i class="fas fa-coins"></i> <span id="worldMoney">0</span> ₽</span>
-                    <span><i class="fas fa-users"></i> <span id="worldClients">0</span></span>
-                    <span><i class="fas fa-building"></i> Уровень: <span id="worldOfficeLevel">1</span></span>
+        <div class="upgrades">
+            <h2>Улучшения банка</h2>
+            <div id="upgradesContainer">
+                <!-- Улучшения будут здесь -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Экран мира -->
+    <div id="worldScreen">
+        <div class="world-header">
+            <button id="backBtn" class="back-btn">← Назад в банк</button>
+            <div style="display: flex; gap: 20px;">
+                <div>💰 <span id="worldMoney">10,000</span> ₽</div>
+                <div>👥 <span id="worldClients">0</span></div>
+                <div>🏢 Уровень: <span id="worldOfficeLevel">1</span></div>
+            </div>
+        </div>
+
+        <div class="world-map" id="worldMap">
+            <!-- Карта будет генерироваться здесь -->
+        </div>
+
+        <div class="office-info">
+            <h2>🏢 Ваш офис</h2>
+            <div class="office-stats">
+                <div class="office-stat">
+                    <div class="stat-value" id="officeVisitors">5</div>
+                    <div class="stat-label">Клиентов/час</div>
+                </div>
+                <div class="office-stat">
+                    <div class="stat-value" id="officeAttractiveness">10%</div>
+                    <div class="stat-label">Привлекательность</div>
+                </div>
+                <div class="office-stat">
+                    <div class="stat-value" id="officeCapacity">20</div>
+                    <div class="stat-label">Вместимость</div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="world-container">
-                <div class="world-map" id="worldMap">
-                    <!-- Здесь будет генерироваться карта -->
-                </div>
+    <script>
+        // Игровое состояние
+        const gameState = {
+            money: 10000,
+            passiveIncome: 0,
+            clients: 0,
+            clickValue: 1000,
+            officeLevel: 1,
+            upgrades: [
+                {
+                    id: 1,
+                    name: "Кофемашина",
+                    description: "+50 ₽/сек, +10% привлекательности",
+                    cost: 5000,
+                    level: 0,
+                    income: 50,
+                    officeBonus: 0.1
+                },
+                {
+                    id: 2,
+                    name: "Доп. операционист",
+                    description: "+200 ₽ за клик, +5% вместимости",
+                    cost: 15000,
+                    level: 0,
+                    clickBonus: 200,
+                    officeBonus: 0.05
+                },
+                {
+                    id: 3,
+                    name: "Вклад 'Сохраняй'",
+                    description: "+300 ₽/сек",
+                    cost: 50000,
+                    level: 0,
+                    income: 300
+                }
+            ]
+        };
+
+        // DOM элементы
+        const bankScreen = document.getElementById('bankScreen');
+        const worldScreen = document.getElementById('worldScreen');
+        const worldBtn = document.getElementById('worldBtn');
+        const backBtn = document.getElementById('backBtn');
+        const clickCard = document.getElementById('clickCard');
+        const worldMap = document.getElementById('worldMap');
+        
+        // Функция обновления UI
+        function updateUI() {
+            document.getElementById('money').textContent = gameState.money.toLocaleString();
+            document.getElementById('passiveIncome').textContent = gameState.passiveIncome.toLocaleString();
+            document.getElementById('clients').textContent = gameState.clients.toLocaleString();
+            document.getElementById('officeLevel').textContent = gameState.officeLevel;
+            document.getElementById('clickValue').textContent = gameState.clickValue.toLocaleString();
+            
+            if (worldScreen.classList.contains('active')) {
+                document.getElementById('worldMoney').textContent = gameState.money.toLocaleString();
+                document.getElementById('worldClients').textContent = gameState.clients.toLocaleString();
+                document.getElementById('worldOfficeLevel').textContent = gameState.officeLevel;
                 
-                <div class="office-info">
-                    <h3><i class="fas fa-building"></i> Ваш офис</h3>
-                    <div class="office-stats">
-                        <div class="office-stat">
-                            <i class="fas fa-user-friends"></i>
-                            <div>
-                                <div class="stat-label">Клиентов в час</div>
-                                <div class="stat-value" id="officeVisitors">5</div>
-                            </div>
-                        </div>
-                        <div class="office-stat">
-                            <i class="fas fa-chart-bar"></i>
-                            <div>
-                                <div class="stat-label">Привлекательность</div>
-                                <div class="stat-value" id="officeAttractiveness">10%</div>
-                            </div>
-                        </div>
-                        <div class="office-stat">
-                            <i class="fas fa-expand-alt"></i>
-                            <div>
-                                <div class="stat-label">Вместимость</div>
-                                <div class="stat-value" id="officeCapacity">20 чел</div>
-                            </div>
-                        </div>
+                const visitors = 5 * gameState.officeLevel;
+                const attractiveness = 10 + (gameState.upgrades.reduce((sum, u) => sum + (u.level * (u.officeBonus || 0)), 0) * 100);
+                const capacity = 20 * gameState.officeLevel;
+                
+                document.getElementById('officeVisitors').textContent = visitors;
+                document.getElementById('officeAttractiveness').textContent = Math.min(attractiveness, 100) + '%';
+                document.getElementById('officeCapacity').textContent = capacity;
+            }
+        }
+
+        // Функция рендера улучшений
+        function renderUpgrades() {
+            const container = document.getElementById('upgradesContainer');
+            container.innerHTML = '';
+            
+            gameState.upgrades.forEach(upgrade => {
+                const div = document.createElement('div');
+                div.className = 'upgrade';
+                div.innerHTML = `
+                    <div>
+                        <strong>${upgrade.name}</strong> (Ур. ${upgrade.level})<br>
+                        <small>${upgrade.description}</small>
                     </div>
+                    <button onclick="buyUpgrade(${upgrade.id})" ${gameState.money < upgrade.cost ? 'disabled' : ''}>
+                        ${upgrade.cost.toLocaleString()} ₽
+                    </button>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Покупка улучшения
+        function buyUpgrade(id) {
+            const upgrade = gameState.upgrades.find(u => u.id === id);
+            if (!upgrade || gameState.money < upgrade.cost) return;
+            
+            gameState.money -= upgrade.cost;
+            upgrade.level++;
+            upgrade.cost = Math.floor(upgrade.cost * 1.5);
+            
+            if (upgrade.income) {
+                gameState.passiveIncome += upgrade.income;
+            }
+            if (upgrade.clickBonus) {
+                gameState.clickValue += upgrade.clickBonus;
+            }
+            
+            updateUI();
+            renderUpgrades();
+            
+            if (worldScreen.classList.contains('active')) {
+                renderWorld();
+            }
+        }
+
+        // Клик по карте
+        clickCard.addEventListener('click', () => {
+            gameState.money += gameState.clickValue;
+            updateUI();
+            
+            // Анимация
+            const bonus = document.createElement('div');
+            bonus.textContent = `+${gameState.clickValue.toLocaleString()} ₽`;
+            bonus.style.position = 'absolute';
+            bonus.style.color = 'gold';
+            bonus.style.fontWeight = 'bold';
+            bonus.style.fontSize = '1.5rem';
+            bonus.style.animation = 'fadeOut 1s forwards';
+            bonus.style.top = '50%';
+            bonus.style.left = '50%';
+            bonus.style.transform = 'translate(-50%, -50%)';
+            clickCard.appendChild(bonus);
+            
+            setTimeout(() => bonus.remove(), 1000);
+        });
+
+        // Переход в мир
+        worldBtn.addEventListener('click', () => {
+            console.log('Переход в мир...');
+            bankScreen.classList.remove('active');
+            worldScreen.classList.add('active');
+            renderWorld();
+            updateUI();
+        });
+
+        // Возврат в банк
+        backBtn.addEventListener('click', () => {
+            console.log('Возврат в банк...');
+            worldScreen.classList.remove('active');
+            bankScreen.classList.add('active');
+        });
+
+        // Рендер мира
+        function renderWorld() {
+            worldMap.innerHTML = '';
+            
+            // Дорога
+            const road = document.createElement('div');
+            road.className = 'road';
+            worldMap.appendChild(road);
+            
+            // Офис
+            const office = document.createElement('div');
+            office.className = 'office';
+            office.innerHTML = `
+                <div class="office-roof"></div>
+                <div class="office-door"></div>
+                <div class="office-sign">БАНК (Ур. ${gameState.officeLevel})</div>
+            `;
+            office.onclick = () => {
+                alert(`🏦 Ваш банк\nУровень: ${gameState.officeLevel}\nКлиентов в час: ${5 * gameState.officeLevel}\nКапитал: ${gameState.money.toLocaleString()} ₽`);
+            };
+            worldMap.appendChild(office);
+            
+            // Деревья
+            for (let i = 0; i < 8; i++) {
+                const tree = document.createElement('div');
+                tree.className = 'tree';
+                tree.style.left = `${10 + i * 10}%`;
+                tree.style.top = `${20 + Math.random() * 30}%`;
+                worldMap.appendChild(tree);
+            }
+            
+            // Конкуренты
+            const competitors = [
+                {name: 'ВТБ', left: '10%', top: '15%'},
+                {name: 'Альфа', left: '80%', top: '60%'},
+                {name: 'Тинькофф', left: '20%', top: '75%'}
+            ];
+            
+            competitors.forEach(comp => {
+                const div = document.createElement('div');
+                div.className = 'competitor';
+                div.textContent = comp.name;
+                div.style.left = comp.left;
+                div.style.top = comp.top;
+                div.onclick = () => {
+                    alert(`🏛️ ${comp.name}\nКрупный конкурент!\nУлучшайте свой банк!`);
+                };
+                worldMap.appendChild(div);
+            });
+            
+            // Запуск анимации людей
+            startPeopleAnimation();
+        }
+
+        // Анимация людей
+        let peopleInterval = null;
+        
+        function startPeopleAnimation() {
+            if (peopleInterval) clearInterval(peopleInterval);
+            
+            peopleInterval = setInterval(() => {
+                // Удаляем людей за пределами экрана
+                document.querySelectorAll('.person').forEach(p => {
+                    if (parseFloat(p.style.left) > 110) p.remove();
+                });
+                
+                // Создаем новых людей
+                const maxPeople = 20 * gameState.officeLevel;
+                const currentPeople = document.querySelectorAll('.person').length;
+                
+                if (currentPeople < maxPeople && Math.random() < 0.3) {
+                    createPerson();
+                }
+            }, 1000);
+        }
+        
+        function createPerson() {
+            const person = document.createElement('div');
+            person.className = 'person';
+            person.style.left = '-50px';
+            person.style.bottom = '50px';
+            person.style.animationDuration = `${10 + Math.random() * 10}s`;
+            person.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+            
+            worldMap.appendChild(person);
+            
+            // Человек заходит в банк
+            setTimeout(() => {
+                if (person.parentNode) {
+                    person.style.animation = 'none';
+                    person.style.transition = 'all 2s';
+                    person.style.left = '50%';
+                    person.style.transform = 'translateX(-50%) scale(0)';
+                    person.style.opacity = '0';
                     
-                    <div class="office-upgrades">
-                        <h4>Улучшения офиса</h4>
-                        <div class="office-upgrade-list" id="officeUpgrades">
-                            <!-- Улучшения офиса будут здесь -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                    setTimeout(() => {
+                        if (person.parentNode) {
+                            person.remove();
+                            gameState.clients++;
+                            const income = Math.floor(gameState.clickValue * 0.1);
+                            gameState.money += income;
+                            updateUI();
+                        }
+                    }, 2000);
+                }
+            }, 5000 + Math.random() * 5000);
+        }
 
-    <!-- Модальное окно улучшения офиса -->
-    <div id="officeUpgradeModal" class="modal">
-        <div class="modal-content">
-            <h3><i class="fas fa-hard-hat"></i> Улучшение офиса</h3>
-            <p id="upgradeDescription">Описание улучшения</p>
-            <div class="upgrade-details">
-                <div class="detail">
-                    <span>Текущий уровень:</span>
-                    <span id="currentLevel">1</span>
-                </div>
-                <div class="detail">
-                    <span>Стоимость улучшения:</span>
-                    <span id="upgradeCost" class="cost">0 ₽</span>
-                </div>
-                <div class="detail">
-                    <span>Новый уровень:</span>
-                    <span id="newLevel" class="new">2</span>
-                </div>
-            </div>
-            <div class="modal-buttons">
-                <button id="cancelUpgradeBtn" class="btn-secondary">Отмена</button>
-                <button id="confirmUpgradeBtn" class="btn-primary">Улучшить</button>
-            </div>
-        </div>
-    </div>
+        // Пассивный доход
+        setInterval(() => {
+            if (gameState.passiveIncome > 0) {
+                gameState.money += gameState.passiveIncome;
+                updateUI();
+            }
+        }, 1000);
 
-    <script src="game.js"></script>
+        // Инициализация
+        function init() {
+            updateUI();
+            renderUpgrades();
+            console.log('Игра запущена!');
+        }
+
+        // Запуск при загрузке
+        window.onload = init;
+        
+        // Анимация для всплывающего текста
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeOut {
+                0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+                100% { opacity: 0; transform: translate(-50%, -100px) scale(1.5); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 </body>
 </html>
