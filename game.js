@@ -5,11 +5,6 @@ const gameState = {
     clients: 0,
     clickValue: 1000,
     officeLevel: 1,
-    officeUpgrades: {
-        capacity: 1,
-        attractiveness: 1,
-        efficiency: 1
-    },
     
     // Базовая статистика офиса
     officeStats: {
@@ -132,7 +127,8 @@ const gameState = {
     world: {
         people: [],
         nextPersonTime: 0,
-        lastUpdate: Date.now()
+        lastUpdate: Date.now(),
+        peopleInterval: null
     }
 };
 
@@ -166,6 +162,7 @@ const cancelUpgradeBtn = document.getElementById('cancelUpgradeBtn');
 const confirmUpgradeBtn = document.getElementById('confirmUpgradeBtn');
 
 let currentUpgrade = null;
+let peopleInterval = null;
 
 // Форматирование чисел
 function formatNumber(num) {
@@ -188,9 +185,9 @@ function calculateOfficeStats() {
     const attractUpgrade = gameState.officeUpgradesList.find(u => u.id === 'attractiveness');
     const efficiencyUpgrade = gameState.officeUpgradesList.find(u => u.id === 'efficiency');
     
-    capacity *= Math.pow(capacityUpgrade.effect, capacityUpgrade.level - 1);
-    attractiveness *= Math.pow(attractUpgrade.effect, attractUpgrade.level - 1);
-    visitors *= Math.pow(efficiencyUpgrade.effect, efficiencyUpgrade.level - 1);
+    if (capacityUpgrade) capacity *= Math.pow(capacityUpgrade.effect, capacityUpgrade.level - 1);
+    if (attractUpgrade) attractiveness *= Math.pow(attractUpgrade.effect, attractUpgrade.level - 1);
+    if (efficiencyUpgrade) visitors *= Math.pow(efficiencyUpgrade.effect, efficiencyUpgrade.level - 1);
     
     // Применяем бонусы от улучшений банка
     gameState.upgrades.forEach(upgrade => {
@@ -223,13 +220,15 @@ function updateUI() {
     officeLevelEl.textContent = gameState.officeLevel;
     clickValueEl.textContent = formatNumber(gameState.clickValue);
     
-    // Обновление мира
-    worldMoneyEl.textContent = formatNumber(gameState.money);
-    worldClientsEl.textContent = formatNumber(gameState.clients);
-    worldOfficeLevelEl.textContent = gameState.officeLevel;
-    officeVisitorsEl.textContent = `${officeStats.visitors}/час`;
-    officeAttractivenessEl.textContent = `${officeStats.attractiveness}%`;
-    officeCapacityEl.textContent = `${officeStats.capacity} чел`;
+    // Обновление мира (если он активен)
+    if (worldScreen.classList.contains('active')) {
+        worldMoneyEl.textContent = formatNumber(gameState.money);
+        worldClientsEl.textContent = formatNumber(gameState.clients);
+        worldOfficeLevelEl.textContent = gameState.officeLevel;
+        officeVisitorsEl.textContent = `${officeStats.visitors}/час`;
+        officeAttractivenessEl.textContent = `${officeStats.attractiveness}%`;
+        officeCapacityEl.textContent = `${officeStats.capacity} чел`;
+    }
 }
 
 // Клик по карте
@@ -274,6 +273,7 @@ function buyUpgrade(upgradeId) {
     upgrade.cost = Math.floor(upgrade.baseCost * Math.pow(upgrade.costGrowth, upgrade.level));
     updateUI();
     renderUpgrades();
+    renderOfficeUpgrades();
 }
 
 // Рендер улучшений банка
@@ -371,20 +371,37 @@ function buyOfficeUpgrade() {
     updateUI();
     renderOfficeUpgrades();
     hideOfficeUpgradeModal();
-    renderWorld();
+    
+    // Если мы в мире, перерисовываем его
+    if (worldScreen.classList.contains('active')) {
+        renderWorld();
+    }
 }
 
 // Переключение между экранами
-worldBtn.addEventListener('click', () => {
+function goToWorld() {
+    console.log('Переход в мир...');
     bankScreen.classList.remove('active');
     worldScreen.classList.add('active');
     renderWorld();
-});
+    updateUI();
+}
 
-backToBankBtn.addEventListener('click', () => {
+function goToBank() {
+    console.log('Возврат в банк...');
     worldScreen.classList.remove('active');
     bankScreen.classList.add('active');
-});
+    
+    // Останавливаем анимацию людей
+    if (peopleInterval) {
+        clearInterval(peopleInterval);
+        peopleInterval = null;
+    }
+}
+
+// Обработчики переключения экранов
+worldBtn.addEventListener('click', goToWorld);
+backToBankBtn.addEventListener('click', goToBank);
 
 // Обработчики модального окна
 cancelUpgradeBtn.addEventListener('click', hideOfficeUpgradeModal);
@@ -392,6 +409,7 @@ confirmUpgradeBtn.addEventListener('click', buyOfficeUpgrade);
 
 // Рендер мира
 function renderWorld() {
+    console.log('Рендеринг мира...');
     worldMap.innerHTML = '';
     
     // Создаем дорогу
@@ -418,7 +436,7 @@ function renderWorld() {
     `;
     
     office.addEventListener('click', () => {
-        alert(`Ваш банк\nУровень: ${gameState.officeLevel}\nКлиентов в час: ${officeStats.visitors}\nВместимость: ${officeStats.capacity} чел`);
+        alert(`🏦 Ваш банк\n\nУровень: ${gameState.officeLevel}\nКлиентов в час: ${officeStats.visitors}\nВместимость: ${officeStats.capacity} чел\nПривлекательность: ${officeStats.attractiveness}%\n\nКапитал: ${formatNumber(gameState.money)} ₽`);
     });
     
     worldMap.appendChild(office);
@@ -449,7 +467,7 @@ function renderWorld() {
         bankEl.style.left = bank.left;
         bankEl.style.background = `linear-gradient(135deg, ${bank.color} 0%, ${bank.color}99 100%)`;
         bankEl.addEventListener('click', () => {
-            alert(`${bank.name}\nКрупный конкурент\nУровень угрозы: Высокий`);
+            alert(`🏛️ ${bank.name}\n\nКрупный конкурент\nУровень угрозы: 🔴 Высокий\n\nСовет: Улучшайте свой офис, чтобы конкурировать!`);
         });
         worldMap.appendChild(bankEl);
     });
@@ -460,33 +478,55 @@ function renderWorld() {
 
 // Анимация людей
 function startPeopleAnimation() {
+    // Останавливаем старый интервал если есть
+    if (peopleInterval) {
+        clearInterval(peopleInterval);
+    }
+    
     const officeStats = calculateOfficeStats();
     
-    setInterval(() => {
+    peopleInterval = setInterval(() => {
         // Удаляем старых людей
         document.querySelectorAll('.person').forEach(p => {
             if (parseFloat(p.style.left) > 110) p.remove();
         });
         
-        // Создаем новых людей
-        if (Math.random() < 0.3 && gameState.world.people.length < officeStats.capacity) {
+        // Создаем новых людей (частота зависит от привлекательности офиса)
+        const spawnChance = 0.1 + (officeStats.attractiveness / 100) * 0.4;
+        if (Math.random() < spawnChance) {
             createPerson();
         }
     }, 1000);
 }
 
 function createPerson() {
+    const officeStats = calculateOfficeStats();
+    
+    // Проверяем вместимость
+    const currentPeople = document.querySelectorAll('.person:not(.entering)').length;
+    if (currentPeople >= officeStats.capacity) return;
+    
     const person = document.createElement('div');
     person.className = 'person';
     person.style.bottom = '100px';
     person.style.left = '-50px';
-    person.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+    
+    // Случайный цвет одежды
+    const colors = ['#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6', '#1abc9c'];
+    person.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+    
+    // Случайная скорость
+    const speed = 15 + Math.random() * 10;
+    person.style.animationDuration = `${speed}s`;
     
     worldMap.appendChild(person);
     
+    // Время до входа в банк зависит от привлекательности
+    const timeToEnter = 3000 + (100 - officeStats.attractiveness) * 100;
+    
     // Через случайное время человек заходит в банк
     setTimeout(() => {
-        if (person.parentNode) {
+        if (person.parentNode && !person.classList.contains('entering')) {
             person.classList.add('entering');
             
             setTimeout(() => {
@@ -494,12 +534,39 @@ function createPerson() {
                     person.remove();
                     // Увеличиваем счетчик клиентов и деньги
                     gameState.clients++;
-                    gameState.money += gameState.clickValue * 0.1; // 10% от клика
+                    const income = Math.floor(gameState.clickValue * (0.05 + (officeStats.attractiveness / 1000)));
+                    gameState.money += income;
                     updateUI();
+                    
+                    // Показываем всплывающее сообщение
+                    showIncomePopup(income, person.style.left, person.style.bottom);
                 }
-            }, 3000);
+            }, 2000);
         }
-    }, 5000 + Math.random() * 10000);
+    }, timeToEnter);
+}
+
+function showIncomePopup(amount, left, bottom) {
+    const popup = document.createElement('div');
+    popup.textContent = `+${formatNumber(amount)} ₽`;
+    popup.style.position = 'absolute';
+    popup.style.left = left;
+    popup.style.bottom = bottom;
+    popup.style.color = '#27ae60';
+    popup.style.fontWeight = 'bold';
+    popup.style.fontSize = '1.2rem';
+    popup.style.background = 'rgba(255, 255, 255, 0.9)';
+    popup.style.padding = '5px 10px';
+    popup.style.borderRadius = '10px';
+    popup.style.boxShadow = '0 3px 10px rgba(0,0,0,0.2)';
+    popup.style.zIndex = '100';
+    popup.style.animation = 'fadeUp 2s ease-out forwards';
+    
+    worldMap.appendChild(popup);
+    
+    setTimeout(() => {
+        if (popup.parentNode) popup.remove();
+    }, 2000);
 }
 
 // Пассивный доход
@@ -512,14 +579,39 @@ setInterval(() => {
 
 // Сохранение игры
 function saveGame() {
-    localStorage.setItem('bankClickerSave', JSON.stringify(gameState));
+    try {
+        const saveData = {
+            money: gameState.money,
+            passiveIncome: gameState.passiveIncome,
+            clients: gameState.clients,
+            clickValue: gameState.clickValue,
+            officeLevel: gameState.officeLevel,
+            upgrades: gameState.upgrades,
+            officeUpgradesList: gameState.officeUpgradesList
+        };
+        localStorage.setItem('bankClickerSave', JSON.stringify(saveData));
+        console.log('Игра сохранена');
+    } catch (e) {
+        console.error('Ошибка сохранения:', e);
+    }
 }
 
 function loadGame() {
-    const save = localStorage.getItem('bankClickerSave');
-    if (save) {
-        const loaded = JSON.parse(save);
-        Object.assign(gameState, loaded);
+    try {
+        const save = localStorage.getItem('bankClickerSave');
+        if (save) {
+            const loaded = JSON.parse(save);
+            gameState.money = loaded.money || 10000;
+            gameState.passiveIncome = loaded.passiveIncome || 0;
+            gameState.clients = loaded.clients || 0;
+            gameState.clickValue = loaded.clickValue || 1000;
+            gameState.officeLevel = loaded.officeLevel || 1;
+            gameState.upgrades = loaded.upgrades || gameState.upgrades;
+            gameState.officeUpgradesList = loaded.officeUpgradesList || gameState.officeUpgradesList;
+            console.log('Игра загружена');
+        }
+    } catch (e) {
+        console.error('Ошибка загрузки:', e);
     }
 }
 
@@ -528,14 +620,15 @@ setInterval(saveGame, 30000);
 
 // Загрузка и инициализация
 function initGame() {
+    console.log('Инициализация игры...');
     loadGame();
     updateUI();
     renderUpgrades();
     renderOfficeUpgrades();
     
-    // Загружаем мир если нужно
-    if (worldScreen.classList.contains('active')) {
-        renderWorld();
+    // Проверяем, не открыт ли уже мир (при перезагрузке страницы)
+    if (window.location.hash === '#world') {
+        goToWorld();
     }
     
     console.log('Игра "Банк-Кликер с миром" запущена!');
@@ -545,3 +638,19 @@ window.onload = initGame;
 
 // Сохраняем при закрытии вкладки
 window.addEventListener('beforeunload', saveGame);
+
+// Обработка хеша в URL для прямого перехода в мир
+window.addEventListener('hashchange', () => {
+    if (window.location.hash === '#world' && !worldScreen.classList.contains('active')) {
+        goToWorld();
+    }
+});
+
+// Добавляем кнопку принудительного сохранения (для отладки)
+document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        saveGame();
+        alert('Игра сохранена вручную!');
+    }
+});
